@@ -1,7 +1,7 @@
 services:
   # PostgreSQL Database
   db:
-    image: postgres:15-alpine
+    image: postgres:18-alpine
     environment:
       POSTGRES_USER: healthcare_user
       POSTGRES_PASSWORD: ${DB_PASSWORD}
