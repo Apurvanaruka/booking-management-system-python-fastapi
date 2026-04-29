@@ -1,15 +1,15 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional
 from datetime import datetime
 
 # Shared properties
 class MedicalRecordBase(BaseModel):
-    patient_id: int
-    appointment_id: Optional[int] = None
-    diagnosis: Optional[str] = None
-    treatment: Optional[str] = None
-    prescription: Optional[str] = None
-    notes: Optional[str] = None
+    patient_id: int = Field(..., examples=[1])
+    appointment_id: Optional[int] = Field(None, examples=[1])
+    diagnosis: Optional[str] = Field(None, examples=["Type 2 Diabetes"])
+    treatment: Optional[str] = Field(None, examples=["Metformin 500mg"])
+    prescription: Optional[str] = Field(None, examples=["Metformin 500mg, twice daily"])
+    notes: Optional[str] = Field(None, examples=["Patient is showing improvement"])
 
 # Properties to receive on medical record creation
 class MedicalRecordCreate(MedicalRecordBase):
@@ -29,7 +29,7 @@ class MedicalRecordInDBBase(MedicalRecordBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Properties to return to client
 class MedicalRecord(MedicalRecordInDBBase):

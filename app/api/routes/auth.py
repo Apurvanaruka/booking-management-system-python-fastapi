@@ -20,7 +20,7 @@ class LoginRequest(BaseModel):
     password: str = "password123"
 
     class Config:
-        schema_extra = {
+        json_schema_extra= {
             "example": {"email": "user@example.com", "password": "supersecret"}
         }
 

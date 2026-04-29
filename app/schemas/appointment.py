@@ -12,12 +12,12 @@ class AppointmentStatus(str, Enum):
 
 # Shared properties
 class AppointmentBase(BaseModel):
-    patient_id: int
-    doctor_id: int
-    start_time: datetime
-    end_time: datetime
-    status: AppointmentStatus = AppointmentStatus.SCHEDULED
-    notes: Optional[str] = None
+    patient_id: int = Field(..., examples=[1])
+    doctor_id: int = Field(..., examples=[1])
+    start_time: datetime = Field(..., examples=["2024-05-01T10:00:00"])
+    end_time: datetime = Field(..., examples=["2024-05-01T11:00:00"])
+    status: AppointmentStatus = Field(AppointmentStatus.SCHEDULED, examples=["scheduled"])
+    notes: Optional[str] = Field(None, examples=["Routine checkup"])
 
 # Properties to receive on appointment creation
 class AppointmentCreate(AppointmentBase):

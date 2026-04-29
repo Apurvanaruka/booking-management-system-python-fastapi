@@ -4,14 +4,14 @@ from datetime import date, datetime
 
 # Shared properties
 class PatientBase(BaseModel):
-    first_name: str
-    last_name: str
-    date_of_birth: date
-    email: EmailStr
-    phone: str
-    address: str
-    insurance_provider: Optional[str] = None
-    insurance_id: Optional[str] = None
+    first_name: str = Field(..., examples=["John"])
+    last_name: str = Field(..., examples=["Doe"])
+    date_of_birth: date = Field(..., examples=["1990-01-01"])
+    email: EmailStr = Field(..., examples=["john.doe@example.com"])
+    phone: str = Field(..., examples=["+1234567890"])
+    address: str = Field(..., examples=["123 Main St, Springfield"])
+    insurance_provider: Optional[str] = Field(None, examples=["Blue Cross"])
+    insurance_id: Optional[str] = Field(None, examples=["BC123456789"])
 
 # Properties to receive on patient creation
 class PatientCreate(PatientBase):
@@ -35,7 +35,7 @@ class PatientInDBBase(PatientBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Properties to return to client
 class Patient(PatientInDBBase):

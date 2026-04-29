@@ -13,8 +13,8 @@ from sqlalchemy import text
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Healthcare Appointment System",
-    description="API for managing healthcare appointments",
+    title="Server",
+    description="API for managing Bookings",
     version="1.0.0",
 )
 
@@ -61,14 +61,15 @@ def custom_openapi():
         routes=app.routes,
     )
 
-    openapi_schema["components"] = {
-        "securitySchemes": {
-            "bearerAuth": {
-                "type": "http",
-                "scheme": "bearer",
-                "bearerFormat": "JWT",
-                "description": "Enter JWT token with 'Bearer ' prefix"
-            }
+    if "components" not in openapi_schema:
+        openapi_schema["components"] = {}
+    
+    openapi_schema["components"]["securitySchemes"] = {
+        "bearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter JWT token with 'Bearer ' prefix"
         }
     }
 

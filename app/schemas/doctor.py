@@ -4,11 +4,11 @@ from datetime import datetime, time
 
 # Shared properties
 class DoctorBase(BaseModel):
-    first_name: str
-    last_name: str
-    email: EmailStr
-    phone: str
-    specialization: str
+    first_name: str = Field(..., examples=["Jane"])
+    last_name: str = Field(..., examples=["Smith"])
+    email: EmailStr = Field(..., examples=["jane.smith@example.com"])
+    phone: str = Field(..., examples=["+1987654321"])
+    specialization: str = Field(..., examples=["Cardiology"])
 
 # Properties to receive on doctor creation
 class DoctorCreate(DoctorBase):
@@ -29,7 +29,7 @@ class DoctorInDBBase(DoctorBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Properties to return to client
 class Doctor(DoctorInDBBase):
@@ -60,7 +60,7 @@ class AvailabilityInDBBase(AvailabilityBase):
     doctor_id: int
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class Availability(AvailabilityInDBBase):
     pass

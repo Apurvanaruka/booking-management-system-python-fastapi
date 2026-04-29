@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -11,10 +11,10 @@ class UserRole(str, Enum):
 
 # Shared properties
 class UserBase(BaseModel):
-    email: EmailStr
-    username: str
-    is_active: bool = True
-    role: UserRole
+    email: EmailStr = Field(..., examples=["user@example.com"])
+    username: str = Field(..., examples=["user123"])
+    is_active: bool = Field(..., examples=[True])
+    role: UserRole = Field(..., examples=["patient"])
 
 # Properties to receive on user creation
 class UserCreate(UserBase):
@@ -35,7 +35,7 @@ class UserInDBBase(UserBase):
     updated_at: Optional[datetime] = None
 
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Properties to return to client
 class User(UserInDBBase):
