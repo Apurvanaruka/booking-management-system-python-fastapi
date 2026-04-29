@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
 
 from app.crud.crud_base import CRUDBase
-from app.db.models import Appointment, Patient, Doctor
+from app.models import Appointment, Patient, Doctor
 from app.schemas.appointment import AppointmentCreate, AppointmentUpdate, AppointmentStatus
 
 class CRUDAppointment(CRUDBase[Appointment, AppointmentCreate, AppointmentUpdate]):

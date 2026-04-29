@@ -9,6 +9,9 @@ class DoctorBase(BaseModel):
     email: EmailStr = Field(..., examples=["jane.smith@example.com"])
     phone: str = Field(..., examples=["+1987654321"])
     specialization: str = Field(..., examples=["Cardiology"])
+    fee: Optional[int] = None
+    experience_years: Optional[int] = None
+    address: Optional[str] = None
 
 # Properties to receive on doctor creation
 class DoctorCreate(DoctorBase):
@@ -21,6 +24,9 @@ class DoctorUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     specialization: Optional[str] = None
+    fee: Optional[int] = None
+    experience_years: Optional[int] = None
+    address: Optional[str] = None
 
 # Properties shared by models stored in DB
 class DoctorInDBBase(DoctorBase):

@@ -5,7 +5,7 @@ from typing import Any, Dict, Optional, Union
 from sqlalchemy.orm import Session
 
 from app.crud.crud_base import CRUDBase
-from app.db.models import Patient
+from app.models import Patient
 from app.schemas.patient import PatientCreate, PatientUpdate
 
 class CRUDPatient(CRUDBase[Patient, PatientCreate, PatientUpdate]):

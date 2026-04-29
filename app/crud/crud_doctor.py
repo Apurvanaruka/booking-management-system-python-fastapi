@@ -4,7 +4,7 @@ from sqlalchemy.orm import Session, joinedload
 
 
 from app.crud.crud_base import CRUDBase
-from app.db.models import Doctor, Availability, Appointment
+from app.models import Doctor, Availability, Appointment
 from app.schemas.doctor import DoctorCreate, DoctorUpdate, AvailabilityCreate
 
 class CRUDDoctor(CRUDBase[Doctor, DoctorCreate, DoctorUpdate]):

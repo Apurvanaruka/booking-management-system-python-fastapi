@@ -5,12 +5,9 @@ from sqlalchemy.orm import Session
 import uvicorn
 from app.api.routes import patient_router, doctor_router, appointment_router, auth_router
 from app.core.config import settings
-from app.db.session import engine, get_db
-from app.db import models
+from app.db.session import get_db
 from app.api.deps import get_current_user
 from sqlalchemy import text
-
-models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Server",
