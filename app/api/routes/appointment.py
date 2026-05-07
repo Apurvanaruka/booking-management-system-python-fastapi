@@ -21,7 +21,7 @@ def read_appointments(
     limit: int = 100,
     start_date: datetime = None,
     end_date: datetime = None,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Retrieve appointments with optional date filtering.
@@ -40,7 +40,7 @@ def read_appointments(
             start_date=start_date, end_date=end_date,
             skip=skip, limit=limit
         )
-    # Admin and staff can see all appointments
+    # Admin, hospital, and staff can see all appointments
     else:
         appointments = appointment.get_multi_with_details(
             db, start_date=start_date, end_date=end_date,
@@ -56,6 +56,7 @@ def create_appointment(
     db: Session = Depends(get_db),
     appointment_in: AppointmentCreate,
     background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Create new appointment.
@@ -80,7 +81,7 @@ def create_appointment(
         doctor_id=appointment_in.doctor_id,
         start_time=appointment_in.start_time,
         end_time=appointment_in.end_time,
-        appointment_id=None  # No appointment ID for new appointments
+        appointment_id=None
     )
 
     if has_conflict:
@@ -107,20 +108,20 @@ def read_appointment(
     *,
     db: Session = Depends(get_db),
     id: int,
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Get appointment by ID.
     """
-    current_user: User = Depends(get_current_user)
     appointment_obj = appointment.get_with_details(db, id=id)
     if not appointment_obj:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
     # Check permissions
-    if current_user.role == "patient" and current_user.reference_id != appointment_obj.patient_id:
+    if current_user.role == "patient" and current_user.reference_id != appointment_obj.get("patient_id"):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    if current_user.role == "doctor" and current_user.reference_id != appointment_obj.doctor_id:
+    if current_user.role == "doctor" and current_user.reference_id != appointment_obj.get("doctor_id"):
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
     return appointment_obj
@@ -133,11 +134,11 @@ def update_appointment(
     id: int,
     appointment_in: AppointmentUpdate,
     background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Update an appointment.
     """
-    current_user: User = Depends(get_current_user)
     appointment_obj = appointment.get(db, id=id)
     if not appointment_obj:
         raise HTTPException(status_code=404, detail="Appointment not found")
@@ -148,7 +149,6 @@ def update_appointment(
 
     # If updating time, check for availability and conflicts
     if appointment_in.start_time and appointment_in.end_time:
-        # Check if the doctor is available at the requested time
         is_available = doctor.check_availability(
             db,
             doctor_id=appointment_obj.doctor_id,
@@ -162,13 +162,12 @@ def update_appointment(
                 detail="Doctor is not available at the requested time"
             )
 
-        # Check for overlapping appointments
         has_conflict = appointment.check_conflicts(
             db,
             doctor_id=appointment_obj.doctor_id,
             start_time=appointment_in.start_time,
             end_time=appointment_in.end_time,
-            appointment_id=id  # Exclude current appointment from conflict check
+            appointment_id=id
         )
 
         if has_conflict:
@@ -197,6 +196,7 @@ def delete_appointment(
     db: Session = Depends(get_db),
     id: int,
     background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Delete an appointment.
@@ -205,15 +205,12 @@ def delete_appointment(
     if not appointment_obj:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    # Store appointment details before deletion for notification
     patient_id = appointment_obj.patient_id
     doctor_id = appointment_obj.doctor_id
     appointment_time = appointment_obj.start_time
 
-    # Delete the appointment
     appointment_obj = appointment.remove(db, id=id)
 
-    # Send cancellation notification in background
     background_tasks.add_task(
         send_appointment_notification,
         appointment_id=id,
@@ -233,6 +230,7 @@ def update_appointment_status(
     id: int,
     status: AppointmentStatus,
     background_tasks: BackgroundTasks,
+    current_user: User = Depends(get_current_user),
 ) -> Any:
     """
     Update appointment status.
@@ -241,10 +239,8 @@ def update_appointment_status(
     if not appointment_obj:
         raise HTTPException(status_code=404, detail="Appointment not found")
 
-    # Update status
     appointment_obj = appointment.update_status(db, id=id, status=status)
 
-    # Send notification in background
     background_tasks.add_task(
         send_appointment_notification,
         appointment_id=appointment_obj.id,
@@ -265,7 +261,6 @@ def get_available_slots(
     """
     Get available appointment slots for a doctor on a specific date.
     """
-    # Get the doctor's availability for the day of the week
     available_slots = doctor.get_available_slots(
         db,
         doctor_id=doctor_id,

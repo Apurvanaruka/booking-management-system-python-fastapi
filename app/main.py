@@ -3,15 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from sqlalchemy.orm import Session
 import uvicorn
-from app.api.routes import patient_router, doctor_router, appointment_router, auth_router
+from app.api.routes import (
+    patient_router, doctor_router, appointment_router,
+    auth_router, hospital_router, department_router,
+    admin_router, booking_router,
+)
 from app.core.config import settings
 from app.db.session import get_db
-from app.api.deps import get_current_user
+from app.api.deps import get_current_user, get_current_admin
 from sqlalchemy import text
 
 app = FastAPI(
-    title="Server",
-    description="API for managing Bookings",
+    title="Healthcare Appointment System",
+    description="API for managing Hospital Appointments — India",
     version="1.0.0",
 )
 
@@ -23,28 +27,56 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Authentication router with no security
+# ─── Public routes (no auth required) ────────────────────────
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
+
+# ─── Protected routes ────────────────────────────────────────
+app.include_router(
+    hospital_router,
+    prefix="/api/hospitals",
+    tags=["Hospitals"],
+    dependencies=[Depends(get_current_user)],
+)
+
+app.include_router(
+    department_router,
+    prefix="/api/departments",
+    tags=["Departments"],
+    dependencies=[Depends(get_current_user)],
+)
 
 app.include_router(
     patient_router,
     prefix="/api/patients",
     tags=["Patients"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 
 app.include_router(
     doctor_router,
     prefix="/api/doctors",
     tags=["Doctors"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
 )
 
 app.include_router(
     appointment_router,
     prefix="/api/appointments",
     tags=["Appointments"],
-    dependencies=[Depends(get_current_user)]
+    dependencies=[Depends(get_current_user)],
+)
+
+app.include_router(
+    admin_router,
+    prefix="/api/admin",
+    tags=["Admin Panel"],
+    dependencies=[Depends(get_current_admin)],
+)
+
+app.include_router(
+    booking_router,
+    prefix="/api/booking",
+    tags=["Patient Booking"],
 )
 
 def custom_openapi():
@@ -60,7 +92,7 @@ def custom_openapi():
 
     if "components" not in openapi_schema:
         openapi_schema["components"] = {}
-    
+
     openapi_schema["components"]["securitySchemes"] = {
         "bearerAuth": {
             "type": "http",
@@ -70,8 +102,17 @@ def custom_openapi():
         }
     }
 
+    # Paths that don't need auth in Swagger
+    public_paths = [
+        "/api/auth/login",
+        "/api/auth/register",
+        "/api/auth/register-hospital",
+        "/api/auth/send-otp",
+        "/api/auth/verify-otp",
+    ]
+
     for path, path_item in openapi_schema["paths"].items():
-        if path == "/api/auth/login" or path == "/api/auth/register":
+        if path in public_paths:
             continue
 
         for method in path_item.values():
@@ -84,7 +125,7 @@ app.openapi = custom_openapi
 
 @app.get("/", tags=["Root"])
 async def root():
-    return {"message": "Welcome to the Healthcare Appointment System API /docs for docs"}
+    return {"message": "Welcome to the Healthcare Appointment System API. Visit /docs for documentation."}
 
 @app.get("/health", tags=["Health"])
 async def health_check(db: Session = Depends(get_db)):

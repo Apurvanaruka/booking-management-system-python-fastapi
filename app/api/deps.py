@@ -42,7 +42,16 @@ def get_current_active_user(current_user = Depends(get_current_user)):
     return current_user
 
 def get_current_admin(current_user = Depends(get_current_user)):
-    if current_user.role != UserRole.ADMIN:
+    if current_user.role != UserRole.ADMIN.value and current_user.role != UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The user doesn't have enough privileges"
+        )
+    return current_user
+
+def get_current_hospital_owner(current_user = Depends(get_current_user)):
+    """Allow hospital owners and admins."""
+    if current_user.role not in [UserRole.HOSPITAL.value, UserRole.HOSPITAL, UserRole.ADMIN.value, UserRole.ADMIN]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="The user doesn't have enough privileges"
@@ -50,7 +59,7 @@ def get_current_admin(current_user = Depends(get_current_user)):
     return current_user
 
 def get_current_doctor(current_user = Depends(get_current_user)):
-    if current_user.role != UserRole.DOCTOR and current_user.role != UserRole.ADMIN:
+    if current_user.role not in [UserRole.DOCTOR.value, UserRole.DOCTOR, UserRole.ADMIN.value, UserRole.ADMIN]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="The user doesn't have enough privileges"
@@ -58,7 +67,12 @@ def get_current_doctor(current_user = Depends(get_current_user)):
     return current_user
 
 def get_current_staff(current_user = Depends(get_current_user)):
-    if current_user.role not in [UserRole.STAFF, UserRole.ADMIN, UserRole.DOCTOR]:
+    allowed = [
+        UserRole.STAFF.value, UserRole.STAFF,
+        UserRole.ADMIN.value, UserRole.ADMIN,
+        UserRole.DOCTOR.value, UserRole.DOCTOR,
+    ]
+    if current_user.role not in allowed:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="The user doesn't have enough privileges"
