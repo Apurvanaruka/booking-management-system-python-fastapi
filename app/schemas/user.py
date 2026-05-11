@@ -10,6 +10,8 @@ class UserRole(str, Enum):
     PATIENT = "patient"
     STAFF = "staff"
     HOSPITAL = "hospital"
+    RECEPTIONIST = "receptionist"
+
 
 
 # Shared properties
